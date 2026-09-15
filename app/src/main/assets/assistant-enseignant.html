@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Assistant Enseignant</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+:root{
+  --paper:#EDE7D8;
+  --card:#FBF8F1;
+  --ink:#1E2A2E;
+  --pine:#2F4F3E;
+  --pine-dark:#233B2F;
+  --mustard:#C98A2B;
+  --mustard-dark:#A9711D;
+  --red:#B33B2E;
+  --muted:#6B6459;
+  --line:#D9D0BC;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Work Sans',sans-serif;
+  min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+}
+h1,h2,h3{
+  font-family:'Lora',serif;
+  margin:0 0 4px 0;
+  color:var(--pine-dark);
+}
+.app{
+  max-width:520px;
+  margin:0 auto;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  padding-bottom:78px;
+}
+.topbar{
+  background:var(--pine);
+  color:#F3EFE3;
+  padding:22px 20px 26px 20px;
+  border-bottom:4px solid var(--pine-dark);
+}
+.topbar h1{color:#F3EFE3;font-size:1.5rem;font-weight:700;}
+.topbar .subtitle{margin:0;font-size:0.85rem;color:#CBD8CC;letter-spacing:0.02em;}
+
+main{flex:1;padding:18px 16px 8px 16px;}
+.view{display:none;}
+.view.active{display:block;animation:fade .18s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+.card{
+  background:var(--card);
+  border-radius:6px;
+  padding:16px 16px 16px 20px;
+  margin-bottom:14px;
+  position:relative;
+  box-shadow:0 1px 2px rgba(30,20,10,0.08);
+  border-left:3px solid var(--red);
+}
+.card.plain{border-left:3px solid var(--line);}
+
+label{
+  display:block;
+  font-size:0.78rem;
+  color:var(--muted);
+  margin:12px 0 4px 0;
+  font-weight:600;
+}
+label:first-child{margin-top:0;}
+input[type=text],input[type=number],select,textarea{
+  width:100%;
+  font-family:'Work Sans',sans-serif;
+  font-size:0.95rem;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:4px;
+  background:#fff;
+  color:var(--ink);
+}
+input:focus,select:focus,textarea:focus{
+  outline:2px solid var(--mustard);
+  outline-offset:1px;
+}
+textarea{min-height:64px;resize:vertical;line-height:1.4;}
+
+.btn{
+  display:inline-block;
+  border:none;
+  border-radius:5px;
+  padding:10px 16px;
+  font-family:'Work Sans',sans-serif;
+  font-weight:600;
+  font-size:0.88rem;
+  cursor:pointer;
+  color:#fff;
+  background:var(--mustard);
+}
+.btn:active{background:var(--mustard-dark);}
+.btn.secondary{background:var(--pine);}
+.btn.secondary:active{background:var(--pine-dark);}
+.btn.ghost{background:transparent;color:var(--red);padding:6px 8px;font-weight:600;font-size:0.82rem;}
+.btn.small{padding:6px 10px;font-size:0.78rem;}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+.section-title{
+  font-size:1.15rem;
+  margin-bottom:2px;
+}
+.section-hint{color:var(--muted);font-size:0.82rem;margin:0 0 16px 0;}
+
+.chip{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:0.74rem;
+  font-weight:600;
+  border:1px solid var(--line);
+  color:var(--muted);
+  background:#fff;
+  margin:2px 4px 2px 0;
+  cursor:pointer;
+}
+.chip.active{background:var(--pine);color:#fff;border-color:var(--pine);}
+
+.saved-item{
+  background:var(--card);
+  border-radius:6px;
+  padding:12px 14px;
+  margin-bottom:10px;
+  border-left:3px solid var(--pine);
+}
+.saved-item h3{font-size:0.98rem;margin-bottom:2px;}
+.saved-item .meta{font-size:0.76rem;color:var(--muted);margin-bottom:6px;}
+.saved-item .body-text{font-size:0.85rem;white-space:pre-wrap;line-height:1.5;color:var(--ink);}
+.saved-item .actions{margin-top:8px;display:flex;gap:14px;}
+
+.preview{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:14px 14px 14px 18px;
+  border-left:4px solid var(--red);
+  white-space:pre-wrap;
+  font-size:0.87rem;
+  line-height:1.55;
+  margin-top:10px;
+}
+
+.empty{
+  text-align:center;
+  color:var(--muted);
+  font-size:0.88rem;
+  padding:30px 10px;
+  font-style:italic;
+}
+
+.tabbar{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  max-width:520px;
+  margin:0 auto;
+  background:var(--card);
+  border-top:1px solid var(--line);
+  display:flex;
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px)) 4px;
+}
+.tabbar button{
+  flex:1;
+  background:none;
+  border:none;
+  font-family:'Work Sans',sans-serif;
+  font-size:0.68rem;
+  font-weight:600;
+  color:var(--muted);
+  padding:8px 2px 4px 2px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  cursor:pointer;
+}
+.tabbar button svg{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:1.8;}
+.tabbar button.active{color:var(--pine-dark);}
+.tabbar button.active svg{stroke:var(--pine-dark);}
+
+.student-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);}
+.student-row:last-child{border-bottom:none;}
+.student-row .name{font-weight:600;font-size:0.9rem;}
+.student-row .avg{font-size:0.8rem;color:var(--muted);}
+.grade-tag{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:4px;padding:2px 6px;font-size:0.72rem;margin:2px 3px 0 0;}
+
+.class-header{display:flex;justify-content:space-between;align-items:center;}
+.class-header h3{margin:0;}
+
+.plan-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);gap:8px;}
+.plan-row:last-child{border-bottom:none;}
+.plan-row .info{flex:1;min-width:0;}
+.plan-row .info .u{font-weight:600;font-size:0.88rem;}
+.plan-row .info .c{font-size:0.75rem;color:var(--muted);}
+.status-btn{border:none;border-radius:20px;padding:5px 11px;font-size:0.72rem;font-weight:700;cursor:pointer;white-space:nowrap;}
+.status-a{background:#E7E1D2;color:var(--muted);}
+.status-b{background:#F0D9AE;color:#7A560F;}
+.status-c{background:#CFE0D3;color:var(--pine-dark);}
+
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#F3EFE3;padding:9px 18px;border-radius:20px;
+  font-size:0.82rem;opacity:0;pointer-events:none;transition:opacity .2s;
+  z-index:50;max-width:88%;text-align:center;
+}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <h1>Assistant Enseignant</h1>
+    <p class="subtitle">Fiches · Notes · Exercices · Programme</p>
+  </div>
+
+  <main id="views">
+
+    <!-- FICHES DE LEÇON -->
+    <section id="view-fiches" class="view active">
+      <div class="section-title">Générateur de fiches</div>
+      <p class="section-hint">Structure en 5 étapes : Warm-Up, Review, Presentation, Practice, Production.</p>
+
+      <div class="card plain">
+        <label>Classe</label>
+        <select id="f-classe">
+          <option>T6</option>
+          <option>T7</option>
+          <option>T8</option>
+          <option>T9</option>
+        </select>
+
+        <label>Unité / Thème</label>
+        <input type="text" id="f-unite" list="unites-t6" placeholder="ex. Time and Date">
+        <datalist id="unites-t6">
+          <option value="Greetings & Introductions">
+          <option value="Time and Date">
+          <option value="The Home">
+          <option value="Family">
+          <option value="Health">
+          <option value="Occupations">
+          <option value="Environment">
+        </datalist>
+
+        <label>Objectif de la leçon</label>
+        <input type="text" id="f-objectif" placeholder="ex. Students will be able to ask and tell the time">
+
+        <label>Vocabulaire clé</label>
+        <input type="text" id="f-vocab" placeholder="mots séparés par des virgules">
+
+        <label>Warm-Up</label>
+        <textarea id="f-warmup" placeholder="Activité de mise en route"></textarea>
+
+        <label>Review</label>
+        <textarea id="f-review" placeholder="Rappel de la séance précédente"></textarea>
+
+        <label>Presentation</label>
+        <textarea id="f-presentation" placeholder="Présentation du point de langue"></textarea>
+
+        <label>Practice</label>
+        <textarea id="f-practice" placeholder="Exercices guidés"></textarea>
+
+        <label>Production</label>
+        <textarea id="f-production" placeholder="Tâche finale des élèves"></textarea>
+
+        <div class="row">
+          <button class="btn" onclick="genererFiche()">Générer l'aperçu</button>
+          <button class="btn secondary" onclick="sauvegarderFiche()">Enregistrer la fiche</button>
+        </div>
+
+        <div id="f-preview"></div>
+      </div>
+
+      <div class="section-title" style="margin-top:22px;">Fiches enregistrées</div>
+      <div id="f-liste"></div>
+    </section>
+
+    <!-- NOTES / ÉLÈVES -->
+    <section id="view-notes" class="view">
+      <div class="section-title">Suivi des notes</div>
+      <p class="section-hint">Gère tes classes, tes élèves et leurs notes.</p>
+
+      <div class="card plain">
+        <label>Nouvelle classe</label>
+        <div class="row" style="margin-top:0;">
+          <input type="text" id="n-classe-nom" placeholder="ex. T6-A" style="flex:1;">
+          <button class="btn small" onclick="ajouterClasse()">Ajouter</button>
+        </div>
+      </div>
+
+      <div id="n-classes"></div>
+    </section>
+
+    <!-- BANQUE D'EXERCICES -->
+    <section id="view-exercices" class="view">
+      <div class="section-title">Banque d'exercices</div>
+      <p class="section-hint">Enregistre et retrouve tes exercices par classe et par type.</p>
+
+      <div class="card plain">
+        <label>Titre</label>
+        <input type="text" id="e-titre" placeholder="ex. Fill in the blanks — Present Simple">
+        <label>Classe</label>
+        <select id="e-classe">
+          <option>T6</option>
+          <option>T7</option>
+          <option>T8</option>
+          <option>T9</option>
+        </select>
+        <label>Type</label>
+        <select id="e-type">
+          <option>Grammaire</option>
+          <option>Vocabulaire</option>
+          <option>Lecture</option>
+          <option>Écriture</option>
+          <option>Oral</option>
+          <option>Sciences — Manipulation</option>
+        </select>
+        <label>Contenu</label>
+        <textarea id="e-contenu" placeholder="Consigne et exercice complet" style="min-height:90px;"></textarea>
+        <div class="row">
+          <button class="btn" onclick="ajouterExercice()">Ajouter à la banque</button>
+        </div>
+      </div>
+
+      <div id="e-filtres" class="row" style="margin-top:4px;"></div>
+      <div id="e-liste" style="margin-top:12px;"></div>
+    </section>
+
+    <!-- PLANIFICATION ANNUELLE -->
+    <section id="view-planning" class="view">
+      <div class="section-title">Programme annuel</div>
+      <p class="section-hint">Suis l'avancement de chaque unité au fil de l'année.</p>
+
+      <div class="card plain">
+        <label>Classe</label>
+        <select id="p-classe">
+          <option>T6</option>
+          <option>T7</option>
+          <option>T8</option>
+          <option>T9</option>
+        </select>
+        <label>Unité</label>
+        <input type="text" id="p-unite" placeholder="ex. Unit 3 — The Home">
+        <label>Période prévue</label>
+        <input type="text" id="p-periode" placeholder="ex. Semaines 5-6">
+        <div class="row">
+          <button class="btn" onclick="ajouterUnitePlan()">Ajouter au programme</button>
+        </div>
+      </div>
+
+      <div id="p-liste"></div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button data-view="fiches" class="active" onclick="switchView('fiches')">
+      <svg viewBox="0 0 24 24"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/><path d="M8 13h8M8 17h5"/></svg>
+      Fiches
+    </button>
+    <button data-view="notes" onclick="switchView('notes')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-4 3.2-6.5 7-6.5s7 2.5 7 6.5"/></svg>
+      Notes
+    </button>
+    <button data-view="exercices" onclick="switchView('exercices')">
+      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      Exercices
+    </button>
+    <button data-view="planning" onclick="switchView('planning')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="1.5"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+      Programme
+    </button>
+  </nav>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let DATA = { fiches: [], classes: [], exercices: [], planning: [] };
+let exFiltreClasse = 'Toutes';
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+async function loadKey(key){
+  try{
+    if(window.storage && window.storage.get){
+      const r = await window.storage.get(key, false);
+      return r && r.value ? JSON.parse(r.value) : [];
+    }
+  }catch(e){ /* fall through to localStorage */ }
+  try{
+    const raw = localStorage.getItem('ae_'+key);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    return [];
+  }
+}
+async function saveKey(key, value){
+  try{
+    if(window.storage && window.storage.set){
+      await window.storage.set(key, JSON.stringify(value), false);
+      return;
+    }
+  }catch(e){ /* fall through to localStorage */ }
+  try{
+    localStorage.setItem('ae_'+key, JSON.stringify(value));
+  }catch(e){
+    showToast("Erreur d'enregistrement");
+  }
+}
+async function getSimpleValue(key){
+  try{
+    if(window.storage && window.storage.get){
+      const v = await window.storage.get(key, false);
+      return v && v.value ? v.value : null;
+    }
+  }catch(e){ /* fall through */ }
+  try{
+    return localStorage.getItem('ae_'+key);
+  }catch(e){
+    return null;
+  }
+}
+async function setSimpleValue(key, value){
+  try{
+    if(window.storage && window.storage.set){
+      await window.storage.set(key, value, false);
+      return;
+    }
+  }catch(e){ /* fall through */ }
+  try{
+    localStorage.setItem('ae_'+key, value);
+  }catch(e){ /* ignore */ }
+}
+
+/* ---------- CONTENU OFFICIEL PRECHARGE (Anglais T6, T7, T8, T9 - FRP + PE) ---------- */
+const SEED_VERSION_CURRENT = "2-english-t6-t9";
+
+function seedTxt(classe, unite, objectif, vocab, warmup, review, presentation, practice, production){
+  let t = `${classe} — ${unite}\nObjectif : ${objectif}\n`;
+  if(vocab) t += `Vocabulaire cle : ${vocab}\n`;
+  t += `\nWARM-UP\n${warmup}\n`;
+  t += `\nREVIEW\n${review}\n`;
+  t += `\nPRESENTATION\n${presentation}\n`;
+  t += `\nPRACTICE\n${practice}\n`;
+  t += `\nPRODUCTION\n${production}`;
+  return t;
+}
+
+const SEED_FICHES_RAW = [
+["T6","Unit 1: Personal Communication","Students will be able to greet, introduce themselves, spell their name and share phone numbers using to be / to have.","Hello, Hi, Good morning/afternoon/evening, Goodbye, See you, Pleased to meet you, What's your name?, My name is..., How old are you?, Where do you come from?",
+"Sing the alphabet song together (A B C D, E F G...) to warm up spelling skills.",
+"Opening unit.",
+"Present the greeting expressions with a vocabulary card; model the A/B greeting dialogue (Hello! What's your name? / Hello! My name is Rose...) and have the class repeat it.",
+"Ballgame: standing in a circle, whoever catches the ball says \"Hello, I'm ___\" then throws it on; matching exercise linking questions (How many brothers and sisters do you have?) to answers; fill-in-the-blank on the greeting dialogue.",
+"In pairs, students perform the full greeting dialogue from memory, then exchange and read out phone-number flashcards to the class (\"My phone number is...\")."],
+["T6","Unit 2: Classroom Communication","Students will be able to follow classroom instructions and ask for clarification or permission using can/may.","Stand up, Sit down, Open/close your book, Listen, Repeat, Do you understand?, Can you repeat please?, Can I come in?, May I go out?",
+"The teacher gives classroom instructions (Go to the blackboard! Open the door!...); students mime and match the pictures to the instructions.",
+"Quick recall of greeting expressions from Unit 1.",
+"Present the asking-for-clarification dialogue (Do you understand? / Yes, I do. / Can you repeat, please?); present asking-for-permission expressions with giving/refusing permission (Yes, you can / No, you can't).",
+"Students perform the short clarification dialogue in pairs; role-play asking to go out, open the window, or go to the toilet, with the teacher granting or refusing permission.",
+"In pairs, students create and act out a short classroom dialogue combining an instruction, a clarification request, and a permission request."],
+["T6","Unit 3: Time and Weather","Students will be able to say the day, month, date, time and weather using is/are and ordinal numbers.","days of the week, months, ordinal numbers 1st-31st, o'clock/half past/quarter past-to, seasons, sunny/rainy/windy/cloudy/snowy",
+"Weather mime game: one student acts out a weather condition, classmates guess it in English.",
+"Recall numbers 0-100 from Unit 1.",
+"Present days/months/dates (What day is today? / What month is it now? / What date is today?); present clock reading (It's one o'clock, It's half past two...) and the seasons/weather chart.",
+"Students fill in the gaps of a seasons text (In summer, it's h_t. In winter, it's c___...); matching exercise linking weather pictures to sentences (It's snowing / It's sunny / It's windy / It's raining).",
+"In pairs, students ask and answer \"What's the weather like today?\" and \"What time is it?\" using real or drawn clock faces."],
+["T6","Unit 4: Everyday Meals","Students will be able to name foods and drinks and express likes/dislikes using the four tastes.","mango, tea, biscuit, sausage, pasta, soup, chocolate, coffee, yoghurt; sweet, salty, bitter, sour; I like / I don't like",
+"Show real food pictures or objects and have students name them as fast as they can.",
+"Recall telling the time from Unit 3, useful for asking about mealtimes.",
+"Present the food and drink vocabulary; present the four-tastes chart with model sentences (I like mango. It tastes sweet. I don't like coffee. It tastes bitter.).",
+"Students complete 4 gapped sentences describing food and its taste; magazine cut-out activity — cut out food pictures and sort them into two columns, \"I like...\" and \"I don't like...\".",
+"Each student says one sentence about a real food using \"I like\" or \"I don't like\" plus its taste, for a class food poster."],
+["T6","Unit 5: Family","Students will be able to name extended family members and describe a family tree using possessives and plurals.","grandfather, grandmother, uncle, aunt, cousin; possessive 's; this/that/these/those",
+"Students point to and name each member of a family-tree poster after the teacher.",
+"Quick recall of food and taste vocabulary from Unit 4.",
+"Present extended-family vocabulary using a family-tree diagram; present regular/irregular plurals, the possessive case and demonstrative pronouns (This is John's father. These are my brothers.).",
+"Students match family names to the people shown in a family photo; complete sentences using the correct possessive form.",
+"Students draw their own simple family tree and present 4-5 family members to a partner using possessive forms."],
+["T6","Unit 6: People's Appearance","Students will be able to name body parts, clothing and describe appearance using adjectives.","head, hair, face, chest, arm, hand, leg, foot; the five senses; tall/short, thin/fat, beautiful/ugly; hat, shoes, shirt, dress, trousers; wear, put on, take off",
+"The teacher points to body parts on a poster, students name them in English.",
+"Recall family vocabulary from Unit 5.",
+"Present the body-part poster and the five senses (We see with our eyes...); present appearance adjectives with \"What does he/she look like?\" and clothing verbs (Put on the hat. Take off the shoes. She is wearing a dress.).",
+"Students dress a paper doll and describe it using \"He/She is wearing...\"; match clothing pictures to their English names.",
+"Students describe a classmate's appearance and clothing in 4-5 sentences for the group to guess who it is."],
+["T6","Unit 7: My Immediate Surroundings","Students will be able to describe school buildings and things around the house using there is/are.","schoolyard, principal's office, classroom, library, toilets, soccer field; bedroom/kitchen/bathroom items; there is/there are",
+"Unscramble 8 scrambled school-object words (hcolso -> school, koob -> book...).",
+"Recall clothing vocabulary from Unit 6.",
+"Present the school-buildings poster and the bedroom/kitchen/bathroom vocabulary posters; drill there is/there are with singular and plural nouns.",
+"Students label a simple school map using there is/are; pair work naming items in the pictured bedroom, kitchen and bathroom.",
+"In pairs, students describe their own school or home using at least 5 vocabulary items and there is/there are."],
+["T7","Unit 1: Personal Communication","Students will be able to introduce others, give personal information, and talk about nationalities and dream jobs.","May I introduce you to...?, This is..., nationalities (Malagasy, French, American, English), What's your dream?, I want to be.../I'd like to become..., Do you think...?",
+"Ballgame: students stand in a circle and introduce themselves (\"I'm R... / My name's...\") as they pass a ball.",
+"Opening unit — quick recall of greetings from T6.",
+"Present the introducing-others expressions with a sample dialogue (Where are you from? / I'm from Fianarantsoa. I'm Betsileo...); present nationalities with the capital-letter rule; present the dream-job dialogue (I want to be a doctor. Do you think it is a good job? / Yes, I do.).",
+"Students complete a registration form with their own personal information; matching exercise linking 12 questions to their answers.",
+"In pairs, students write and perform an original dream-job dialogue using \"I want to / I'd like to\" and \"Do you think...? / I think... / I don't think so.\""],
+["T7","Unit 2: Classroom Communication","Students will be able to ask for permission and understand short answers using modals can/may.","Excuse me, may I go out please?, Can I...?, Yes, you can / No, you can't",
+"Simon Says with classroom instructions (Stand up! Go back to your seat! Open your copybook!).",
+"Recall the dream-job dialogue from Unit 1.",
+"Present the asking-for-permission expressions and their possible answers (OK, go ahead. / Yes, you can. / No, you can't.); present short yes/no answers with auxiliaries.",
+"Students role-play the sample permission dialogues in pairs, swapping roles; groups create a \"Do and Don't\" poster for the classroom.",
+"Each group presents its \"Do and Don't\" poster to the class, explaining the rules in English."],
+["T7","Unit 3: Common Food","Students will be able to talk about food preferences, tastes and colours using comparatives and possessives.","sweet, sour, bitter, salty, spicy, disgusting, delicious; prefer... to..., like/love/enjoy + V-ing; my/his/her/your, mine/his/hers/yours",
+"Students sort foods they like into box A and foods they don't like into box B, then share with a partner.",
+"Recall permission expressions from Unit 2.",
+"Present taste-and-colour vocabulary with \"to be\"; present \"prefer... to...\" and possessive adjectives/pronouns; present the comparative form for tastes (Chocolate is sweeter than lemon.).",
+"Students complete gap-fill activities (prefer...to..., possessives, like+V-ing, comparatives); pair interview asking friends about food likes/dislikes and reporting back.",
+"Students say or write 3 sentences: \"I prefer ___ to ___\", \"I like/love/enjoy ___ing\", \"___ is sweeter/more bitter than ___\"."],
+["T7","Unit 4: Family","Students will be able to describe the nuclear and extended family using possessives and matching.","mother, father, brother, sister; grandparents, aunt, uncle, cousin, nephew, niece, in-laws",
+"Quick oral round — students name 3 members of their own family in English.",
+"Recall food-preference sentences from Unit 3.",
+"Present the nuclear-family reading passage (My name is Tala... My mother's name is Manga...) and check comprehension; present the extended-family diagram with in-laws, nephew, niece.",
+"Students answer comprehension questions about the reading passage; matching exercise linking extended-family words to their family-photo position.",
+"Students write a short paragraph about their own family, modelled on the Tala text, using at least 5 family words."],
+["T7","Unit 5: Means of Communication","Students will be able to name means of communication and build WH-questions about media habits.","television, radio, newspaper, phone; to watch, to listen to, to read, to call, to dial",
+"The teacher points to a picture (TV, radio, phone...), says the word twice, students repeat, then say it without the teacher speaking.",
+"Recall family vocabulary from Unit 4.",
+"Present verb + means-of-communication matching (to watch -> television...); present WH-question word order with \"do\" (Which TV channel do you watch? Who do you call?).",
+"Students unscramble 4 sets of words into correct WH-questions; pair speaking activity asking and answering about TV/radio habits.",
+"In pairs, students interview each other about their media habits and report one fact about their partner to the class."],
+["T7","Unit 6: The Environment","Students will be able to describe school buildings using demonstrative pronouns (this/that/these/those).","classroom, teachers' room, office, library, canteen, toilet, laboratory; public school, private school",
+"Simon Says with objects inside the classroom (Point to the board! Touch your desk!).",
+"Recall the media-habits interview from Unit 5.",
+"Present the demonstrative-pronoun table (near/far, singular/plural: What's this? / What's that? / What are these? / What are those?); present school-building vocabulary with a map.",
+"Students draw and label a simple map of their own school; pair practice asking \"What's this?\" and \"What are those?\" about classroom objects.",
+"Students present their school map to a partner, naming at least 5 buildings using this/that/these/those."],
+["T8","Unit 1: Personal Communication","Students will be able to express preferences and feelings using I'd rather, gerund verbs, and present continuous.","happy, excited, sad, worried, tired; holidays, weekends; means of transport; I'd rather + base verb; like/prefer + V-ing; because",
+"Show mood/feeling pictures; students name the feeling in English.",
+"Opening unit — recall greetings and personal info from T7.",
+"Present \"I'd rather\" for preference (I'd rather stay with you) versus \"like/prefer + V-ing\" (I like swimming, but he hates swimming); present present continuous for temporary facts and \"because\" for giving reasons.",
+"Students complete sentences choosing I'd rather or like/prefer+V-ing; pair work asking and giving preferences about holidays, weekends, and transport.",
+"Students write 3 sentences about their own preferences using I'd rather, a gerund verb, and because."],
+["T8","Unit 2: Classroom Communication","Students will be able to lend/borrow politely and report classroom commands.","lend, borrow, give back, can/could + infinitive-to; reported speech for commands",
+"Real-object borrowing chain using \"Could you lend me...?\" / \"Here you are.\"",
+"Recall the preference sentences from Unit 1.",
+"Present the lending/borrowing expressions with can/could; present reported speech for commands, showing the direct to reported transformation (\"Sit down.\" -> She asked me to sit down.).",
+"Students transform 5 direct commands into reported speech; pair role-play of borrowing dialogues.",
+"Students report 3 real classroom instructions the teacher gave that day, using reported speech."],
+["T8","Unit 3: Daily Life","Students will be able to describe daily routines and habits using the present simple, sequence markers and frequency adverbs.","wake up, get up, make the bed, fetch water, tidy the room; first, then, after that, next, finally; always, often, sometimes, rarely, never; How often...?",
+"Students mime a daily activity for the class to guess.",
+"Recall reported speech from Unit 2.",
+"Present a daily-routine text and daily-chores vocabulary; present sequence markers and frequency adverbs (He often visits his parents on the weekends.).",
+"Students complete gapped sentences with the present simple and a frequency adverb; describe their own routine using sequence markers.",
+"Students write a short paragraph about their daily routine using at least 3 habitual actions, 2 sequence markers, and 2 frequency adverbs."],
+["T8","Unit 4: Food","Students will be able to ask prices and talk about ingredients and recipes using quantifiers and comparatives.","How much is/are...?, prices in Ariary; ingredients (egg, flour, milk, lemon, butter); some/any/no; comparatives and superlatives",
+"Show market fruit/vegetable pictures with prices; students practise \"How much is/are...?\"",
+"Recall the daily-routine paragraph from Unit 3.",
+"Present the price chart and question forms (How much does this cost? / What's the price of this?); present quantifiers some/any/no and comparative/superlative adjectives with food examples.",
+"Students use the price chart to ask and answer about 5 fruits/vegetables; unscramble ingredient words from a recipe.",
+"In pairs, students role-play a market scene, asking prices and comparing which fruit is cheaper or more expensive."],
+["T8","Unit 5: Family","Students will be able to name family members using a family tree and family-group descriptions.","mother, brother, sister; Have you got a brother? Yes, I have. / No, I haven't.",
+"\"Make family groups\": each student takes a family role and introduces themselves (\"I'm the mother.\").",
+"Recall the market role-play from Unit 4.",
+"Present a family picture and Have got questions for family members.",
+"Students ask a partner \"Have you got a brother/sister?\" and note the answers; describe a family picture.",
+"Students present their own family group to the class using \"Have got\" and family vocabulary."],
+["T8","Unit 6: Preventive Health","Students will be able to describe illnesses and symptoms using have got and imperatives.","headache, sore throat, cough, fever, stomach ache, diarrhea; I have got.../ I've got...; How are you feeling?",
+"The teacher mimes a symptom, students name the illness (\"You've got a headache!\").",
+"Recall family vocabulary from Unit 5.",
+"Present the illness picture set and \"have got\" structure; present the \"How do you feel?\" exchange (What's the matter? / I have a headache. / I'm sorry to hear that.).",
+"Students look at 10 illness pictures and complete \"I have got...\" sentences; pair role-play of the feeling-unwell dialogue.",
+"In pairs, students act out a short doctor/patient dialogue using at least 3 illness words and one piece of advice."],
+["T8","Unit 7: Means of Communication","Students will be able to hold a telephone conversation and identify means of communication, formal and informal.","computer, radio, telephone, newspaper, cellular, letter, TV, magazine; formal/informal telephone expressions",
+"Students name as many means of communication as they can from a picture set.",
+"Recall the illness dialogue from Unit 6.",
+"Present the means-of-communication vocabulary and the formal vs informal telephone-conversation tables side by side.",
+"Students sort 10 telephone expressions into formal/informal columns; pair practice of a short phone call, once formal and once informal.",
+"In pairs, students perform a phone conversation of their choice (formal or informal) for the class."],
+["T8","Unit 8: My City, My Country","Students will be able to describe city and country life and give directions using comparatives and prepositions of place.","apartment, cottage, farmhouse, bungalow; shopping mall; Go straight ahead, Turn left/right, next to, opposite, behind",
+"Show the \"Country Life vs City Life\" picture; students list what they see.",
+"Recall the phone-conversation performance from Unit 7.",
+"Present the city-life text (benefits of living in a city) and types-of-houses vocabulary; present direction expressions and prepositions of place.",
+"Students compare city and country life in short sentences; pair work giving directions on a simple map.",
+"In pairs, students describe their own town or village and give directions from the school to a place they know well."],
+["T9","Unit 1: Personal Communication","Students will be able to express preferences and feelings in a restaurant context using I'd rather, gerund verbs, and because.","school subjects, hobbies, food; I'd rather + base verb; like/enjoy/prefer + V-ing; because; Can I see a menu, please? What's today's special?",
+"Students list their favourite school subjects and hobbies as a quick class survey.",
+"Opening unit — recall preference structures from T8.",
+"Present \"I'd rather\" versus \"like/enjoy/prefer + V-ing\"; present the restaurant dialogue vocabulary (Waitperson/Customer exchange) and feeling adjectives.",
+"Students role-play the restaurant dialogue in groups of three, ordering food and drink; complete sentences using I'd rather or the gerund form.",
+"In pairs, students write and perform an original restaurant dialogue using at least 3 preference expressions."],
+["T9","Unit 2: Classroom Communication","Students will be able to report classroom commands using reported speech.","reported speech for commands and requests (He told Nancy to do the exercise. She asked me not to be lazy.)",
+"The teacher gives 3 quick classroom commands; students report them aloud in reported speech.",
+"Recall the restaurant dialogue from Unit 1.",
+"Present the direct-to-reported-speech transformation table for requests/commands, using quotes from Maya Angelou and Albert Einstein as models.",
+"Students transform 6 direct commands/requests into reported speech.",
+"Students report 3 real instructions a teacher or parent gave them recently, using reported speech."],
+["T9","Unit 3: Our Time","Students will be able to narrate past events and past habits using past continuous, past simple and used to.","amazing, wonderful, strange, boring; Wow! Super!; What a beautiful day! / How beautiful you are!",
+"Students look at a holiday/vacation picture and share one adjective describing how it makes them feel.",
+"Recall reported speech from Unit 2.",
+"Present past continuous vs past simple with while/when; present \"used to\" for past habits and \"to be used to + V-ing\", using a reading text about changing daily habits.",
+"Students answer 5 comprehension questions on the reading text; complete sentences choosing used to or the correct past tense.",
+"Students write 3 sentences about something they used to do as a child but don't do anymore."],
+["T9","Unit 4: Food","Students will be able to discuss balanced diets and give food advice using should and comparatives.","balanced diet, junk food, fruits, vegetables, whole grains, protein foods; should; comparatives/superlatives; frequency adverbs; but, so, however",
+"Students sort food pictures into \"balanced diet\" and \"junk food\" groups.",
+"Recall past-habits sentences from Unit 3.",
+"Present the balanced-diet and junk-food texts; present \"should\" for advice and linking words expressing contrast/consequence.",
+"Students complete a letter offering food advice using should; pair work comparing two diets using comparatives.",
+"Students write a short letter advising a friend on healthier eating, using should and at least one linking word."],
+["T9","Unit 5: Family","Students will be able to ask for and give permission, forbid, and discuss family relationships using may, can and must/have to.","Will you let me...?, Do you mind if I...?, Can I...? May I...?; You can/may; Don't.../ You mustn't",
+"Students look at a picture of a family scene and guess what permission is being asked.",
+"Recall the food-advice letter from Unit 4.",
+"Present the asking/giving-permission expressions and forbidding structures (must/have to vs don't have to) using two sample dialogues (asking to go outside, asking for a sleepover).",
+"Students role-play asking a parent for permission in pairs, using at least 2 target expressions; discuss family-conflict vocabulary from a short reading.",
+"In pairs, students write and perform a short dialogue where one asks permission and the other grants, refuses, or sets a condition."],
+["T9","Unit 6: Healthy Life","Students will be able to discuss illnesses, remedies and traditional vs modern medicine using \"to be good for\" and comparatives.","illness vocabulary, health idioms; to be good for + V-ing; traditional medicine, modern medicine",
+"Class brainstorm of home/traditional remedies students know.",
+"Recall the permission dialogue from Unit 5.",
+"Present illness vocabulary and health idioms; present \"to be good for\" (Ginger is good for relieving nausea.); present the traditional-vs-modern-medicine text and comparatives.",
+"In small groups, students generate \"to be good for\" sentences for a given illness; comprehension questions on the traditional/modern medicine text.",
+"Students write a short paragraph on their preferred remedy for a specific illness, using \"to be good for\" and comparing the two types of medicine."],
+["T9","Unit 7: Jobs and Mass Media","Students will be able to talk about jobs and job interviews using present perfect with for/since and word formation.","common local jobs; job skills; interviewer/interviewee, employer/employee, full-time/part-time, CV, job ad; for/since; present perfect vs simple past",
+"Students match job names to pictures as fast as possible.",
+"Recall the illness remedies from Unit 6.",
+"Present a telephone job-interview dialogue and job-skills expressions; present for/since with present perfect and word formation (teach -> teacher).",
+"Students complete 10 sentences with for or since; matching exercise linking job situations to the correct profession.",
+"In pairs, students role-play a short telephone job-interview call, using at least one for/since sentence."],
+["T9","Unit 8: Environment","Students will be able to discuss environmental issues and propose solutions using if-clauses.","erosion, deforestation, pollution, emissions, carbon footprint, global warming, degradation; if-clause type 2 and type 3",
+"Students describe an environmental picture in groups of 4.",
+"Recall the job-interview role-play from Unit 7.",
+"Present environmental-issues vocabulary; present if-clause type 2 (unreal present) and type 3 (unreal past) with environment examples (If we planted more trees, the air would be cleaner.).",
+"Students answer speaking questions about pollution and climate change; complete if-clause sentences about environmental solutions.",
+"Students write a short paragraph describing an environmental problem, its effects, and a proposed solution using an if-clause."],
+];
+
+function buildSeedFiches(){
+  const list = [];
+  let idBase = 1000000;
+  SEED_FICHES_RAW.forEach(r=>{
+    const [classe,unite,objectif,vocab,warmup,review,presentation,practice,production] = r;
+    list.push({id:idBase++, classe, unite, objectif, date:"Programme officiel",
+      txt: seedTxt(classe,unite,objectif,vocab,warmup,review,presentation,practice,production)});
+  });
+  return list;
+}
+
+const SEED_EXERCICES_RAW = [
+["Spell and match","T6","Grammaire","Spell your partner's name aloud (How do you spell...?), then match 6 questions (What's your name? / How old are you?...) to their correct answers."],
+["Instruction pictures","T6","Vocabulaire","Match 8 teacher instructions to their pictures, then mime three of them for a partner to guess."],
+["Match the weather","T6","Vocabulaire","Match 4 weather pictures to the correct sentence, then write today's real weather in a full sentence."],
+["Taste sort","T6","Vocabulaire","Sort 8 food words into sweet/salty/bitter/sour, then write 2 \"I like\" and 2 \"I don't like\" sentences."],
+["Family tree match","T6","Grammaire","Match 6 extended-family words to the correct person in a family photo, then write 3 possessive sentences."],
+["Guess who","T6","Lecture","Read 3 short appearance descriptions and match each to the correct picture, then describe your own clothes today."],
+["Unscramble and place","T6","Grammaire","Unscramble 8 school-object words, then use 4 of them in \"there is / there are\" sentences."],
+["Match my info","T7","Grammaire","Match 6 personal-information questions to the correct answers, then answer them about yourself."],
+["Ask and answer","T7","Oral","Complete 5 short permission dialogues with can/can't or may/may not, then act one out with a partner."],
+["Compare the tastes","T7","Grammaire","Complete 5 comparative sentences about local foods, then interview a partner about their food preference."],
+["My family text","T7","Lecture","Read a short family text and answer 3 comprehension questions, then write 3 sentences about your own family."],
+["Put the words in order","T7","Grammaire","Unscramble 4 sets of words into correct questions, then answer them about yourself."],
+["This, that, these, those","T7","Grammaire","Complete 6 sentences with the correct demonstrative pronoun, then label a simple school map."],
+["I'd rather...","T8","Grammaire","Complete 5 sentences with I'd rather or the correct gerund form, then write one true sentence about yourself."],
+["Report the command","T8","Grammaire","Transform 5 direct classroom commands into reported speech using told/asked + to."],
+["My daily routine","T8","Écriture","Complete 5 sentences with the present simple and a frequency adverb, then write your own short routine paragraph."],
+["How much...?","T8","Oral","Use a price chart to write 5 questions and answers about fruit and vegetable prices."],
+["Have you got...?","T8","Oral","Ask 4 classmates if they have brothers or sisters and record their answers."],
+["What's the matter?","T8","Vocabulaire","Complete 5 \"I have got...\" sentences from illness pictures, then give one piece of advice for each."],
+["Formal or informal?","T8","Écriture","Sort 8 telephone phrases into formal/informal, then write a 4-line phone dialogue of your choice."],
+["Give directions","T8","Oral","Look at a simple street map and write 5 direction sentences from the school to 5 different places."],
+["At the restaurant","T9","Grammaire","Complete 5 gaps in a restaurant dialogue using I'd rather or the correct gerund form."],
+["Report it","T9","Grammaire","Transform 6 direct classroom commands into reported speech."],
+["Used to...","T9","Lecture","Answer 5 comprehension questions about a reading on past habits, then write 3 sentences about your own past habits."],
+["Give advice","T9","Écriture","Complete 5 sentences of food advice using should, then write 2 sentences comparing a balanced diet to junk food."],
+["Asking permission","T9","Oral","Complete 5 short permission dialogues using may/can/must, then act one out with a partner."],
+["Good remedies","T9","Écriture","Write 5 sentences using \"to be good for\" to recommend remedies for 5 different illnesses."],
+["For or since?","T9","Grammaire","Complete 8 sentences with for or since about job and life experience."],
+["If we...","T9","Grammaire","Complete 5 if-clause sentences (type 2 or 3) about environmental solutions, then propose one solution of your own."],
+];
+
+function buildSeedExercices(){
+  let idBase = 2000000;
+  return SEED_EXERCICES_RAW.map(([titre,classe,type,contenu])=>({id:idBase++, titre, classe, type, contenu}));
+}
+
+function buildSeedPlanning(){
+  let idBase = 3000000;
+  return SEED_FICHES_RAW.map(([classe,unite])=>({id:idBase++, classe, unite, periode:"", statut:0}));
+}
+
+function stripOldSeed(arr){
+  // Remove anything from a previous seed version (ids below 10,000,000);
+  // user-created entries use Date.now() ids, which are far larger.
+  return arr.filter(x=>x.id>=10000000);
+}
+
+async function init(){
+  DATA.fiches = await loadKey('fiches');
+  DATA.classes = await loadKey('classes');
+  DATA.exercices = await loadKey('exercices');
+  DATA.planning = await loadKey('planning');
+
+  let storedVersion = null;
+  try{
+    storedVersion = await getSimpleValue('seedVersion');
+  }catch(e){ storedVersion = null; }
+
+  if(storedVersion !== SEED_VERSION_CURRENT){
+    DATA.fiches = stripOldSeed(DATA.fiches).concat(buildSeedFiches());
+    DATA.exercices = stripOldSeed(DATA.exercices).concat(buildSeedExercices());
+    DATA.planning = stripOldSeed(DATA.planning).concat(buildSeedPlanning());
+    await saveKey('fiches', DATA.fiches);
+    await saveKey('exercices', DATA.exercices);
+    await saveKey('planning', DATA.planning);
+    await setSimpleValue('seedVersion', SEED_VERSION_CURRENT);
+  }
+
+  renderFiches();
+  renderClasses();
+  renderExercices();
+  renderPlanning();
+}
+
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+}
+
+function esc(s){
+  return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+/* ---------- FICHES ---------- */
+function buildFicheText(){
+  const classe = document.getElementById('f-classe').value;
+  const unite = document.getElementById('f-unite').value.trim();
+  const objectif = document.getElementById('f-objectif').value.trim();
+  const vocab = document.getElementById('f-vocab').value.trim();
+  const warmup = document.getElementById('f-warmup').value.trim();
+  const review = document.getElementById('f-review').value.trim();
+  const presentation = document.getElementById('f-presentation').value.trim();
+  const practice = document.getElementById('f-practice').value.trim();
+  const production = document.getElementById('f-production').value.trim();
+
+  let txt = `${classe} — ${unite || '(unité non précisée)'}\n`;
+  txt += `Objectif : ${objectif || '—'}\n`;
+  if(vocab) txt += `Vocabulaire clé : ${vocab}\n`;
+  txt += `\nWARM-UP\n${warmup || '—'}\n`;
+  txt += `\nREVIEW\n${review || '—'}\n`;
+  txt += `\nPRESENTATION\n${presentation || '—'}\n`;
+  txt += `\nPRACTICE\n${practice || '—'}\n`;
+  txt += `\nPRODUCTION\n${production || '—'}`;
+  return {classe, unite, objectif, txt};
+}
+
+function genererFiche(){
+  const {txt} = buildFicheText();
+  document.getElementById('f-preview').innerHTML = `<div class="preview">${esc(txt)}</div>`;
+}
+
+async function sauvegarderFiche(){
+  const {classe, unite, objectif, txt} = buildFicheText();
+  if(!unite){ showToast("Indique une unité avant d'enregistrer"); return; }
+  DATA.fiches.unshift({id:Date.now(), classe, unite, objectif, txt, date:new Date().toLocaleDateString('fr-FR')});
+  await saveKey('fiches', DATA.fiches);
+  renderFiches();
+  showToast('Fiche enregistrée');
+}
+
+async function supprimerFiche(id){
+  DATA.fiches = DATA.fiches.filter(f=>f.id!==id);
+  await saveKey('fiches', DATA.fiches);
+  renderFiches();
+}
+
+function renderFiches(){
+  const el = document.getElementById('f-liste');
+  if(!DATA.fiches.length){ el.innerHTML = "<div class=\"empty\">Aucune fiche enregistrée pour l'instant.</div>"; return; }
+  el.innerHTML = DATA.fiches.map(f=>`
+    <div class="saved-item">
+      <h3>${esc(f.classe)} — ${esc(f.unite)}</h3>
+      <div class="meta">${esc(f.objectif||'')} · ${esc(f.date)}</div>
+      <div class="body-text">${esc(f.txt)}</div>
+      <div class="actions">
+        <button class="btn ghost" onclick="copierTexte(${f.id})">Copier</button>
+        <button class="btn ghost" onclick="supprimerFiche(${f.id})">Supprimer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function copierTexte(id){
+  const f = DATA.fiches.find(x=>x.id===id);
+  if(!f) return;
+  navigator.clipboard.writeText(f.txt).then(()=>showToast('Copié')).catch(()=>showToast('Impossible de copier'));
+}
+
+/* ---------- CLASSES / NOTES ---------- */
+async function ajouterClasse(){
+  const input = document.getElementById('n-classe-nom');
+  const nom = input.value.trim();
+  if(!nom) return;
+  DATA.classes.push({id:Date.now(), nom, students:[]});
+  input.value='';
+  await saveKey('classes', DATA.classes);
+  renderClasses();
+}
+
+async function supprimerClasse(cid){
+  DATA.classes = DATA.classes.filter(c=>c.id!==cid);
+  await saveKey('classes', DATA.classes);
+  renderClasses();
+}
+
+async function ajouterEleve(cid){
+  const input = document.getElementById('eleve-input-'+cid);
+  const nom = input.value.trim();
+  if(!nom) return;
+  const c = DATA.classes.find(x=>x.id===cid);
+  c.students.push({id:Date.now(), nom, grades:[]});
+  input.value='';
+  await saveKey('classes', DATA.classes);
+  renderClasses();
+}
+
+async function supprimerEleve(cid, sid){
+  const c = DATA.classes.find(x=>x.id===cid);
+  c.students = c.students.filter(s=>s.id!==sid);
+  await saveKey('classes', DATA.classes);
+  renderClasses();
+}
+
+async function ajouterNote(cid, sid){
+  const input = document.getElementById('note-input-'+cid+'-'+sid);
+  const val = parseFloat(input.value);
+  if(isNaN(val)) return;
+  const c = DATA.classes.find(x=>x.id===cid);
+  const s = c.students.find(x=>x.id===sid);
+  s.grades.push(val);
+  input.value='';
+  await saveKey('classes', DATA.classes);
+  renderClasses();
+}
+
+function moyenne(grades){
+  if(!grades.length) return '—';
+  return (grades.reduce((a,b)=>a+b,0)/grades.length).toFixed(1);
+}
+
+function renderClasses(){
+  const el = document.getElementById('n-classes');
+  if(!DATA.classes.length){ el.innerHTML = '<div class="empty">Ajoute une classe pour commencer le suivi.</div>'; return; }
+  el.innerHTML = DATA.classes.map(c=>`
+    <div class="card plain">
+      <div class="class-header">
+        <h3>${esc(c.nom)}</h3>
+        <button class="btn ghost" onclick="supprimerClasse(${c.id})">Supprimer</button>
+      </div>
+      ${c.students.map(s=>`
+        <div class="student-row">
+          <div style="flex:1;">
+            <div class="name">${esc(s.nom)}</div>
+            <div>${s.grades.map(g=>`<span class="grade-tag">${g}</span>`).join('')}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="avg">Moy. ${moyenne(s.grades)}</div>
+            <button class="btn ghost" onclick="supprimerEleve(${c.id},${s.id})">retirer</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:6px;margin-bottom:10px;">
+          <input type="number" step="0.5" id="note-input-${c.id}-${s.id}" placeholder="note /20" style="flex:1;">
+          <button class="btn small" onclick="ajouterNote(${c.id},${s.id})">Ajouter</button>
+        </div>
+      `).join('')}
+      <div class="row">
+        <input type="text" id="eleve-input-${c.id}" placeholder="Nom de l'élève" style="flex:1;">
+        <button class="btn small secondary" onclick="ajouterEleve(${c.id})">+ Élève</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---------- EXERCICES ---------- */
+async function ajouterExercice(){
+  const titre = document.getElementById('e-titre').value.trim();
+  const classe = document.getElementById('e-classe').value;
+  const type = document.getElementById('e-type').value;
+  const contenu = document.getElementById('e-contenu').value.trim();
+  if(!titre || !contenu){ showToast('Titre et contenu requis'); return; }
+  DATA.exercices.unshift({id:Date.now(), titre, classe, type, contenu});
+  document.getElementById('e-titre').value='';
+  document.getElementById('e-contenu').value='';
+  await saveKey('exercices', DATA.exercices);
+  renderExercices();
+  showToast('Exercice ajouté');
+}
+
+async function supprimerExercice(id){
+  DATA.exercices = DATA.exercices.filter(x=>x.id!==id);
+  await saveKey('exercices', DATA.exercices);
+  renderExercices();
+}
+
+function filtrerExercices(classe){
+  exFiltreClasse = classe;
+  renderExercices();
+}
+
+function renderExercices(){
+  const classes = ['Toutes','T6','T7','T8','T9'];
+  document.getElementById('e-filtres').innerHTML = classes.map(c=>
+    `<span class="chip ${exFiltreClasse===c?'active':''}" onclick="filtrerExercices('${c}')">${esc(c)}</span>`
+  ).join('');
+
+  const liste = DATA.exercices.filter(x => exFiltreClasse==='Toutes' || x.classe===exFiltreClasse);
+  const el = document.getElementById('e-liste');
+  if(!liste.length){ el.innerHTML = '<div class="empty">Aucun exercice pour ce filtre.</div>'; return; }
+  el.innerHTML = liste.map(x=>`
+    <div class="saved-item">
+      <h3>${esc(x.titre)}</h3>
+      <div class="meta">${esc(x.classe)} · ${esc(x.type)}</div>
+      <div class="body-text">${esc(x.contenu)}</div>
+      <div class="actions">
+        <button class="btn ghost" onclick="supprimerExercice(${x.id})">Supprimer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---------- PLANIFICATION ---------- */
+async function ajouterUnitePlan(){
+  const classe = document.getElementById('p-classe').value;
+  const unite = document.getElementById('p-unite').value.trim();
+  const periode = document.getElementById('p-periode').value.trim();
+  if(!unite) return;
+  DATA.planning.push({id:Date.now(), classe, unite, periode, statut:0});
+  document.getElementById('p-unite').value='';
+  document.getElementById('p-periode').value='';
+  await saveKey('planning', DATA.planning);
+  renderPlanning();
+}
+
+async function cyclerStatut(id){
+  const p = DATA.planning.find(x=>x.id===id);
+  p.statut = (p.statut + 1) % 3;
+  await saveKey('planning', DATA.planning);
+  renderPlanning();
+}
+
+async function supprimerPlan(id){
+  DATA.planning = DATA.planning.filter(x=>x.id!==id);
+  await saveKey('planning', DATA.planning);
+  renderPlanning();
+}
+
+function renderPlanning(){
+  const el = document.getElementById('p-liste');
+  if(!DATA.planning.length){ el.innerHTML = '<div class="empty">Ajoute une unité pour construire ton programme.</div>'; return; }
+  const labels = ['Prévu','En cours','Terminé'];
+  const cls = ['status-a','status-b','status-c'];
+  el.innerHTML = `<div class="card plain">` + DATA.planning.map(p=>`
+    <div class="plan-row">
+      <div class="info">
+        <div class="u">${esc(p.unite)}</div>
+        <div class="c">${esc(p.classe)}${p.periode ? ' · '+esc(p.periode) : ''}</div>
+      </div>
+      <button class="status-btn ${cls[p.statut]}" onclick="cyclerStatut(${p.id})">${labels[p.statut]}</button>
+      <button class="btn ghost" onclick="supprimerPlan(${p.id})">×</button>
+    </div>
+  `).join('') + `</div>`;
+}
+
+init();
+</script>
+</body>
+</html>
